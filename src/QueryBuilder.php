@@ -125,13 +125,17 @@ class QueryBuilder
 	{
 		foreach ($this->conditions as $condition) {
 			if (!$condition->hasValue()) {
-				$condition->setValue($this->parameters->offsetGet($condition->getParameter()));
+				$value = $this->parameters->offsetGet($condition->getParameter());
 
-				if (!is_array($condition->getValue())) {
-					if (!is_numeric($condition->getValue())) {
-						$condition->setValue('"' . $condition->getValue() . '"');
+				if (is_array($value)) {
+					$value = implode(',', $value);
+				} else {
+					if (!is_numeric($value)) {
+						$value = '"' . $value . '"';
 					}
 				}
+
+				$condition->setValue($value);
 			}
 		}
 

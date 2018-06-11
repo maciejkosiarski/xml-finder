@@ -26,7 +26,7 @@ class Condition implements BasicCondition
 	/**
 	 * Value to compare
 	 *
-	 * @var string
+	 * @var string|array
 	 */
 	protected $value;
 
@@ -57,26 +57,24 @@ class Condition implements BasicCondition
 	 */
 	public function __construct(string $condition)
 	{
-		$exploded = explode('.', $condition);
+		$conditionParts = end(explode('.', $condition));
 
-		$cond = end($exploded);
+		$this->path = implode('/', explode('.', rtrim(str_replace($conditionParts, '', $condition), '.')));
 
-		$this->path = implode('/', explode('.', rtrim(str_replace($cond, '', $condition), '.')));
+		$conditionParts = explode(' ', $conditionParts);
 
-		$cond = explode(' ', $cond);
+		if (count($conditionParts) != 3) throw new InvalidConditionException($condition);
 
-		if (count($cond) != 3) throw new InvalidConditionException($condition);
+		$this->key = $conditionParts[0];
 
-		$this->key = $cond[0];
+		if (!array_key_exists($conditionParts[1], self::FEATURES)) throw new InvalidOperatorException($conditionParts[1]);
 
-		if (!array_key_exists($cond[1], self::FEATURES)) throw new InvalidOperatorException($cond[1]);
+		$this->operator = $conditionParts[1];
 
-		$this->operator = $cond[1];
-
-		if ($this->isParameterKey($cond[2])) {
-			$this->parameter = substr($cond[2],1);
+		if ($this->isParameterKey($conditionParts[2])) {
+			$this->parameter = substr($conditionParts[2],1);
 		} else {
-			$this->value = (is_numeric($cond[2])) ? $cond[2] : '"' . $cond[2] . '"';
+			$this->value = (is_numeric($conditionParts[2])) ? $conditionParts[2] : '"' . $conditionParts[2] . '"';
 		}
 	}
 
@@ -112,7 +110,12 @@ class Condition implements BasicCondition
 		return false;
 	}
 
-	public function setValue($value): void
+	public function getValue(): string
+	{
+		return $this->value;
+	}
+
+	public function setValue(string $value): void
 	{
 		$this->value = $value;
 	}
@@ -125,11 +128,6 @@ class Condition implements BasicCondition
 	public function getKey(): string
 	{
 		return $this->key;
-	}
-
-	public function getValue(): string
-	{
-		return $this->value;
 	}
 
 	private function getFeatureFactory(): FeatureFactory

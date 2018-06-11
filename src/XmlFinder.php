@@ -6,7 +6,8 @@ namespace MaciejKosiarski\XmlFinder;
 
 use MaciejKosiarski\XmlFinder\Condition\ConditionFactory;
 use MaciejKosiarski\XmlFinder\Exception\FileNotFoundException;
-use MaciejKosiarski\XmlFinder\Exception\InvalidXmlException;
+use MaciejKosiarski\XmlFinder\Exception\InvalidXmlFileException;
+use MaciejKosiarski\XmlFinder\Exception\InvalidXmlStringException;
 
 /**
  * Class XmlFinder
@@ -26,24 +27,27 @@ class XmlFinder
 
 	/**
 	 * XmlFinder constructor.
-	 * @param null $xmlSource
-	 * @throws InvalidXmlException
-	 * @throws FIleNotFoundException
+	 * @param string $xmlSource
+	 * @throws FileNotFoundException
+	 * @throws InvalidXmlFileException
+	 * @throws InvalidXmlStringException
 	 */
-	public function __construct($xmlSource = null)
+	public function __construct(string $xmlSource)
 	{
-		if (!is_null($xmlSource)) {
-			$path      = pathinfo($xmlSource);
-			$extension = isset($path['extension']) ? $path['extension'] : null;
+		$path      = pathinfo($xmlSource);
+		$extension = isset($path['extension']) ? $path['extension'] : null;
 
+		if (is_null($extension)) {
+			$this->importString($xmlSource);
+		} else {
 			if ($extension != 'xml') {
-				throw new InvalidXmlException($extension);
+				throw new InvalidXmlFileException($extension);
 			}
 
-			$this->import($xmlSource);
-
-			$this->queryBuilder = new QueryBuilder($this, new ConditionFactory());
+			$this->importFile($xmlSource);
 		}
+
+		$this->queryBuilder = new QueryBuilder($this, new ConditionFactory());
 	}
 
 	/**
@@ -53,16 +57,35 @@ class XmlFinder
 	 * @return bool
 	 * @throws FileNotFoundException
 	 */
-	private function import(?string $xmlFile = null): bool
+	private function importFile(?string $xmlFile): bool
 	{
-		if (!is_null($xmlFile)) {
-			if (file_exists($xmlFile)) {
-				$this->data = (simplexml_load_file($xmlFile));
-				return true;
-			}
+		if (file_exists($xmlFile)) {
+			$this->data = (simplexml_load_file($xmlFile));
+			return true;
 		}
 
-		throw new FIleNotFoundException();
+		throw new FileNotFoundException();
+	}
+
+	/**
+	 * @param string $xmlString
+	 * @throws InvalidXmlStringException
+	 */
+	private function importString(string $xmlString)
+	{
+		libxml_use_internal_errors(true);
+
+		if (!simplexml_load_string($xmlString)) {
+			$errors = libxml_get_errors();
+
+			foreach ($errors as $error) {
+				throw new InvalidXmlStringException($error->message, $error->level, $error->column, $error->line);
+			}
+
+			libxml_clear_errors();
+		}
+
+		$this->data = simplexml_load_string($xmlString);
 	}
 
 	/**
