@@ -16,10 +16,15 @@ class NotInFeature extends ConditionFeature
 	{
 		$values = '[';
 
-		foreach ($this->getValue() as $value) {
-			$values .= 'not(contains('.$this->getKey() . ',' . ((is_numeric($value)) ? $value : '"' . $value . '"') . ')) and ';
+		foreach (explode(',', $this->getValue()) as $value) {
+			$values .= $this->stickConditionPart($value);
 		}
 
 		return rtrim($values, ' and') .']';
+	}
+
+	private function stickConditionPart(string $value)
+	{
+		return 'not(contains('.$this->getKey() . ',' . ((is_numeric($value)) ? $value : '"' . $value . '"') . ')) and ';
 	}
 }

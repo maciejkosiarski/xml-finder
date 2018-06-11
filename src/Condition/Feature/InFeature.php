@@ -16,10 +16,15 @@ class InFeature extends ConditionFeature
 	{
 		$values = '[';
 
-		foreach ($this->getValue() as $value) {
-			$values .= 'contains('.$this->getKey() . ',' . ((is_numeric($value)) ? $value : '"' . $value . '"') . ') or ';
+		foreach (explode(',', $this->getValue()) as $value) {
+			$values .= $this->stickConditionPart($value);
 		}
 
 		return rtrim($values, ' or') .']';
+	}
+
+	private function stickConditionPart(string $value)
+	{
+		return 'contains('.$this->getKey() . ',' . ((is_numeric($value)) ? $value : '"' . $value . '"') . ') or ';
 	}
 }
