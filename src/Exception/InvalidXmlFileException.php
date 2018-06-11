@@ -3,11 +3,11 @@
 namespace MaciejKosiarski\XmlFinder\Exception;
 
 /**
- * Class InvalidXmlException
+ * Class InvalidXmlFileException
  * @package MaciejKosiarski\XmlFinder\Exception
  * @author  Maciej Kosiarski <maciek.kosiarski@gmail.com>
  */
-class InvalidXmlException extends \Exception
+class InvalidXmlFileException extends \Exception
 {
 	public function __construct($extension)
 	{
