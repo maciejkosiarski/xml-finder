@@ -1,4 +1,9 @@
 {
+    "name": "maciejkosiarski/xml-finder",
+    "description": "Simple php library to creating query on xml file",
+    "homepage": "https://github.com/maciejkosiarski/xml-finder.git",
+    "type": "library",
+    "license": "CC-BY-3.0",
     "require": {
         "php": "^7.1.3"
     },
